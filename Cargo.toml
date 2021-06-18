@@ -1,0 +1,16 @@
+[package]
+name = "eiri"
+version = "0.1.0"
+authors = ["Pavel Sobolev"]
+edition = "2018"
+description = "Whoa! What's that?!"
+documentation = "https://docs.rs/eiri"
+readme = "README.md"
+homepage = "https://paveloom-a.github.io/Eiri"
+repository = "https://github.com/paveloom-a/Eiri"
+license-file = "LICENSE.md"
+keywords = ["rss", "news", "feed", "aggregator", "fltk"]
+categories = ["graphics"]
+
+[dependencies]
+fltk = { version = "~1.0.19", features = ["fltk-bundled", "use-ninja"] }
