@@ -1,0 +1,36 @@
+name: Debug Build
+
+on:
+  pull_request:
+    branches: main
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    steps:
+    - name: Download dependencies (Linux only)
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libpango1.0-dev libx11-dev libxext-dev \
+                                libxft-dev libxinerama-dev libxcursor-dev \
+                                libxrender-dev libxfixes-dev ninja-build
+    - name: Checkout the repository
+      uses: actions/checkout@v2
+    - name: Build
+      run: |
+        cargo lint
+        cargo build
+    - name: Upload the binary
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ ( startsWith(matrix.os, 'ubuntu') && 'Linux' ) ||
+                  ( startsWith(matrix.os, 'windows') && 'Windows' ) ||
+                  ( startsWith(matrix.os, 'macOS') && 'macOS' ) }}
+        path: |
+          target/debug/eiri
+          target/debug/eiri.exe
