@@ -1,3 +1,6 @@
+// Switch from the console subsystem to the windows subsystem in the release mode
+#![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
+
 use fltk::{app, prelude::*, window::Window};
 
 fn main() {

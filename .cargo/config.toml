@@ -1,2 +1,2 @@
 [alias]
-lint = ["clippy", "--", "-W", "clippy::pedantic", "-W", "clippy::cargo"]
+lint = ["clippy", "--", "-D", "clippy::pedantic", "-D", "clippy::cargo"]
