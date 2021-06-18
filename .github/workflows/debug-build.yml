@@ -7,13 +7,16 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    name: ${{ ( startsWith(matrix.os, 'ubuntu') && 'Linux' ) ||
+              ( startsWith(matrix.os, 'windows') && 'Windows' ) ||
+              ( startsWith(matrix.os, 'mac') && 'macOS' ) }}
     strategy:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
 
     steps:
     - name: Download dependencies (Linux only)
-      if: ${{ matrix.os == 'ubuntu-latest' }}
+      if: ${{ startsWith(matrix.os, 'ubuntu') }}
       run: |
         sudo apt-get update
         sudo apt-get install -y libpango1.0-dev libx11-dev libxext-dev \
@@ -25,6 +28,14 @@ jobs:
       run: |
         cargo lint
         cargo build
+        cargo build --release
+        if [ ${{ startsWith(matrix.os, 'windows') }} ]; then
+          mv target/debug/eiri.exe eiri-debug.exe
+          mv target/release/eiri.exe eiri-release.exe
+        else
+          mv target/debug/eiri eiri-debug
+          mv target/release/eiri eiri-release
+        fi
     - name: Upload the binary
       uses: actions/upload-artifact@v2
       with:
@@ -32,5 +43,7 @@ jobs:
                   ( startsWith(matrix.os, 'windows') && 'Windows' ) ||
                   ( startsWith(matrix.os, 'macOS') && 'macOS' ) }}
         path: |
-          target/debug/eiri
-          target/debug/eiri.exe
+          eiri-debug
+          eiri-debug.exe
+          eiri-release
+          eiri-release.exe
