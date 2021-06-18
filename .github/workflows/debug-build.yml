@@ -39,6 +39,7 @@ jobs:
         else
           mv target/debug/eiri eiri-debug
           mv target/release/eiri eiri-release
+          strip eiri-release eiri-debug
         fi
     - name: Upload the binaries
       uses: actions/upload-artifact@v2

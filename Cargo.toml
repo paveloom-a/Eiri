@@ -12,5 +12,13 @@ license-file = "LICENSE.md"
 keywords = ["rss", "news", "feed", "aggregator", "fltk"]
 categories = ["graphics"]
 
+[profile.dev]
+panic = 'abort'
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = 'abort'
+
 [dependencies]
 fltk = { version = "~1.0.19", features = ["fltk-bundled", "use-ninja"] }
