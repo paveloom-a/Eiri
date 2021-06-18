@@ -29,14 +29,14 @@ jobs:
         cargo lint
         cargo build
         cargo build --release
-        if [ ${{ startsWith(matrix.os, 'windows') }} ]; then
+        if ${{ startsWith(matrix.os, 'windows') }}; then
           mv target/debug/eiri.exe eiri-debug.exe
           mv target/release/eiri.exe eiri-release.exe
         else
           mv target/debug/eiri eiri-debug
           mv target/release/eiri eiri-release
         fi
-    - name: Upload the binary
+    - name: Upload the binaries
       uses: actions/upload-artifact@v2
       with:
         name: ${{ ( startsWith(matrix.os, 'ubuntu') && 'Linux' ) ||
