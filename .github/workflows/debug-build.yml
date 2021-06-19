@@ -44,7 +44,7 @@ jobs:
     - name: Create an AppImage (Linux only)
       if: ${{ startsWith(matrix.os, 'ubuntu') }}
       run: |
-        wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage -o linuxdeploy.AppImage
+        wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage -O linuxdeploy.AppImage
         sudo chmod u+x linuxdeploy.AppImage
         ./linuxdeploy.AppImage --appdir app -e eiri-release -d assets/eiri.desktop -i assets/eiri.svg -o appimage
         mv Eiri*.AppImage Eiri.AppImage
