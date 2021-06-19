@@ -1,0 +1,7 @@
+[Desktop Entry]
+Version=0.1.0
+Type=Application
+Name=Eiri
+Exec=eiri
+Icon=eiri
+Categories=Feed;Network;

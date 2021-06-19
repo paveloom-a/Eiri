@@ -1,2 +1,6 @@
-# Rust specific
+# Rust
 /target
+
+# AppImage
+/app
+/*.AppImage
