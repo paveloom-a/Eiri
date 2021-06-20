@@ -12,6 +12,14 @@ license-file = "LICENSE.md"
 keywords = ["rss", "news", "feed", "aggregator", "fltk"]
 categories = ["graphics"]
 
+[package.metadata.bundle]
+name = "Eiri"
+identifier = "io.github.paveloom.eiri"
+icon = ["assets/eiri.svg"]
+resources = ["assets"]
+copyright = "Copyright (c) Pavel Sobolev 2021."
+category = "public.app-category.news"
+
 [profile.dev]
 panic = 'abort'
 

@@ -48,6 +48,12 @@ jobs:
         sudo chmod u+x linuxdeploy.AppImage
         ./linuxdeploy.AppImage --appdir app -e eiri -d assets/eiri.desktop -i assets/eiri.svg -o appimage
         mv Eiri*.AppImage Eiri.AppImage
+    - name: Create an App Bundle (macOS only)
+      if: ${{ startsWith(matrix.os, 'mac') }}
+      run: |
+        cargo install cargo-bundle
+        cargo bundle
+        ls
     - name: Upload the binaries
       uses: actions/upload-artifact@v2
       with:
