@@ -53,7 +53,7 @@ jobs:
       run: |
         cargo install cargo-bundle
         cargo bundle
-        ls
+        mv debug/bundle/osx/Eiri.app .
     - name: Upload the binaries
       uses: actions/upload-artifact@v2
       with:
@@ -66,3 +66,4 @@ jobs:
           eiri
           eiri.exe
           Eiri.AppImage
+          Eiri.app
