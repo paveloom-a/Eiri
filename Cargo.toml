@@ -15,7 +15,7 @@ categories = ["graphics"]
 [package.metadata.bundle]
 name = "Eiri"
 identifier = "io.github.paveloom.eiri"
-icon = ["assets/eiri.svg"]
+icon = ["assets/eiri.png"]
 resources = ["assets"]
 copyright = "Copyright (c) Pavel Sobolev 2021."
 category = "public.app-category.news"
