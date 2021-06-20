@@ -35,10 +35,10 @@ jobs:
         cargo build --release
         if ${{ startsWith(matrix.os, 'windows') }}; then
           mv target/debug/eiri.exe eiri-debug.exe
-          mv target/release/eiri.exe eiri.exe
+          mv target/release/eiri.exe .
         else
           mv target/debug/eiri eiri-debug
-          mv target/release/eiri eiri
+          mv target/release/eiri .
           strip eiri eiri-debug
         fi
     - name: Create an AppImage (Linux only)
@@ -53,7 +53,7 @@ jobs:
       run: |
         cargo install cargo-bundle
         cargo bundle
-        mv debug/bundle/osx/Eiri.app .
+        mv target/debug/bundle/osx/Eiri.app .
     - name: Upload the binaries
       uses: actions/upload-artifact@v2
       with:
