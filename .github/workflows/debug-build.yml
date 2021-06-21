@@ -53,12 +53,9 @@ jobs:
       run: |
         linuxdeploy --appdir AppDir -e eiri -d assets/eiri.desktop -i assets/eiri.svg -o appimage
         mv Eiri*.AppImage Eiri.AppImage
-        appimage-builder --recipe .github/recipes/AppImageBuilder.yml --skip-build
+        rm AppDir/eiri.svg
+        appimage-builder --recipe .github/recipes/AppImageBuilder.yml
         mv Eiri-*.AppImage Eiri\ \(+GLib\).AppImage
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
-      with:
-        limit-access-to-actor: true
     - name: Create an App Bundle (macOS only)
       if: ${{ startsWith(matrix.os, 'mac') }}
       run: |
