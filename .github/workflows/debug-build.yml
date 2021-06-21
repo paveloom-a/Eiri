@@ -29,9 +29,10 @@ jobs:
                                 python3-pip python3-setuptools patchelf \
                                 desktop-file-utils libgdk-pixbuf2.0-dev \
                                 fakeroot strace fuse
-        wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage -O /usr/local/bin/linuxdeploy
-        wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
-        pip3 install appimage-builder
+        sudo wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage -O /usr/local/bin/linuxdeploy
+        sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
+        sudo chmod +x /usr/local/bin/linuxdeploy /usr/local/bin/appimagetool
+        sudo pip3 install appimage-builder
     - name: Checkout the repository
       uses: actions/checkout@v2
     - name: Build
