@@ -25,7 +25,14 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libpango1.0-dev libx11-dev libxext-dev \
                                 libxft-dev libxinerama-dev libxcursor-dev \
-                                libxrender-dev libxfixes-dev ninja-build
+                                libxrender-dev libxfixes-dev ninja-build \
+                                python3-pip python3-setuptools patchelf \
+                                desktop-file-utils libgdk-pixbuf2.0-dev \
+                                fakeroot strace fuse
+        sudo wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage -O /usr/local/bin/linuxdeploy
+        sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
+        sudo chmod u+x /usr/local/bin/linuxdeploy /usr/local/bin/appimagetool
+        sudo pip3 install appimage-builder
     - name: Checkout the repository
       uses: actions/checkout@v2
     - name: Build
@@ -41,13 +48,13 @@ jobs:
           mv target/release/eiri .
           strip eiri eiri-debug
         fi
-    - name: Create an AppImage (Linux only)
+    - name: Create AppImages (Linux only)
       if: ${{ startsWith(matrix.os, 'ubuntu') }}
       run: |
-        wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage -O linuxdeploy.AppImage
-        sudo chmod u+x linuxdeploy.AppImage
-        ./linuxdeploy.AppImage --appdir app -e eiri -d assets/eiri.desktop -i assets/eiri.svg -o appimage
+        linuxdeploy.AppImage --appdir AppDir -e eiri -d assets/eiri.desktop -i assets/eiri.svg -o appimage
         mv Eiri*.AppImage Eiri.AppImage
+        appimage-builder --recipe .github/recipes/AppImageBuilder.yml --skip-build
+        mv Eiri-*.AppImage Eiri (+GLib).AppImage
     - name: Create an App Bundle (macOS only)
       if: ${{ startsWith(matrix.os, 'mac') }}
       run: |
@@ -66,4 +73,5 @@ jobs:
           eiri
           eiri.exe
           Eiri.AppImage
+          Eiri\ \(+GLib\).AppImage
           Eiri.app
