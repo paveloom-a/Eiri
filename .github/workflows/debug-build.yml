@@ -26,7 +26,7 @@ jobs:
         sudo apt-get install -y libpango1.0-dev libx11-dev libxext-dev \
                                 libxft-dev libxinerama-dev libxcursor-dev \
                                 libxrender-dev libxfixes-dev ninja-build \
-                                python3-pip python3-setuptools patchelf \
+                                python3-pip python3-setuptools appstream patchelf \
                                 desktop-file-utils libgdk-pixbuf2.0-dev \
                                 fakeroot strace fuse
         sudo wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage -O /usr/local/bin/linuxdeploy
@@ -55,6 +55,10 @@ jobs:
         mv Eiri*.AppImage Eiri.AppImage
         appimage-builder --recipe .github/recipes/AppImageBuilder.yml --skip-build
         mv Eiri-*.AppImage Eiri\ \(+GLib\).AppImage
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      with:
+        limit-access-to-actor: true
     - name: Create an App Bundle (macOS only)
       if: ${{ startsWith(matrix.os, 'mac') }}
       run: |
