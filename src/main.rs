@@ -4,7 +4,7 @@
 use fltk::{app, image::PngImage, prelude::*, window::Window};
 
 fn main() {
-    let icon: PngImage = PngImage::from_data(include_bytes!("../assets/eiri.png")).unwrap();
+    let icon: PngImage = PngImage::from_data(include_bytes!("../assets/eiri-32.png")).unwrap();
     let app = app::App::default();
     let mut wind = Window::new(100, 100, 400, 300, "Eiri");
     wind.set_icon(Some(icon));

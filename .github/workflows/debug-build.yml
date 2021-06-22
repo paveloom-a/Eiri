@@ -47,7 +47,7 @@ jobs:
     - name: Create AppImages (Linux only)
       if: ${{ startsWith(matrix.os, 'ubuntu') }}
       run: |
-        linuxdeploy --appdir AppDir -e eiri -d assets/eiri.desktop -i assets/eiri.png -o appimage
+        linuxdeploy --appdir AppDir -e eiri -d assets/eiri.desktop -i assets/eiri-64.png -o appimage
         mv Eiri*.AppImage Eiri.AppImage
     - name: Create an App Bundle (macOS only)
       if: ${{ startsWith(matrix.os, 'mac') }}
