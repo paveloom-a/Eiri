@@ -3,12 +3,13 @@
 
 use fltk::{
     app::{self, App},
-    enums::{FrameType, Shortcut},
+    enums::{Color, FrameType, Shortcut},
     frame::Frame,
     group::{Pack, Tile},
     image::PngImage,
     menu::{MenuBar, MenuFlag},
     prelude::*,
+    table::{TableRow, TableRowSelectMode},
     tree::Tree,
     window::Window,
 };
@@ -17,7 +18,7 @@ fn main() {
     let app = App::default();
     app::background(255, 255, 255);
     app::set_visible_focus(false);
-    app::set_frame_type(FrameType::NoBox);
+    app::set_frame_type(FrameType::BorderBox);
 
     // 1. Window
 
@@ -36,17 +37,19 @@ fn main() {
     window_tile_resize_box.hide();
     window_tile.resizable(&window_tile_resize_box);
 
+    let menubar_height = 30;
+
     // 2.1 Feeds
 
     let feeds_width = 200;
-    let feeds_toolbar_height = 30;
 
     let mut feeds = Pack::default().with_size(feeds_width, window.height());
-    feeds.set_frame(FrameType::UpFrame);
+    feeds.set_frame(FrameType::BorderFrame);
+    feeds.set_color(Color::Black);
 
     // 2.1.1 Feeds MenuBar
 
-    let mut feeds_menubar = MenuBar::default().with_size(0, feeds_toolbar_height);
+    let mut feeds_menubar = MenuBar::default().with_size(0, menubar_height);
     feeds_menubar.add("@+", Shortcut::from_char('a'), MenuFlag::Normal, |_| {
         println!("Pressed!")
     });
@@ -54,18 +57,42 @@ fn main() {
 
     // 2.1.2 Feeds Tree
 
-    let feeds_tree = Tree::default().with_size(0, window.height() - feeds_toolbar_height);
+    let mut feeds_tree = Tree::default().with_size(0, window.height() - menubar_height);
+    feeds_tree.set_frame(FrameType::BorderBox);
     feeds_tree.end();
 
+    feeds.resizable(&feeds_menubar);
     feeds.resizable(&feeds_tree);
     feeds.end();
 
     // 2.2 News
 
-    let news = Pack::default()
+    let mut news = Pack::default()
         .with_pos(feeds_width, 0)
-        .with_size(window.height() - feeds_width, window.height());
+        .with_size(window.width() - feeds_width, window.height());
+    news.set_frame(FrameType::BorderFrame);
+    news.set_color(Color::Black);
 
+    // 2.2.1 News MenuBar
+
+    let mut news_menubar = MenuBar::default().with_size(0, menubar_height);
+    news_menubar.add(
+        "@circle",
+        Shortcut::from_char('r'),
+        MenuFlag::Normal,
+        |_| println!("Read!"),
+    );
+    news_menubar.end();
+
+    // 2.2.2 News Feed
+
+    let mut news_feed = TableRow::default().with_size(0, window.height() - menubar_height);
+    news_feed.set_type(TableRowSelectMode::Multi);
+    news_feed.set_frame(FrameType::BorderBox);
+    news_feed.end();
+
+    news.resizable(&news_menubar);
+    news.resizable(&news_feed);
     news.end();
 
     window_tile.end();
