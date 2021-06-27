@@ -1,0 +1,2 @@
+pub const SHOW_ADD_FEED_WINDOW: i32 = 1000;
+pub const HIDE_ADD_FEED_WINDOW: i32 = 1001;
