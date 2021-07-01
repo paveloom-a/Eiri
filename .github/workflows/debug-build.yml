@@ -44,7 +44,7 @@ jobs:
           mv target/release/eiri .
           strip eiri eiri-debug
         fi
-    - name: Create AppImages (Linux only)
+    - name: Create an AppImage (Linux only)
       if: ${{ startsWith(matrix.os, 'ubuntu') }}
       run: |
         linuxdeploy --appdir AppDir -e eiri -d assets/eiri.desktop -i assets/eiri-64.png -o appimage

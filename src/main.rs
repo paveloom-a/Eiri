@@ -17,6 +17,11 @@ fn main() {
         horizontal_border_height: 4,
     };
 
+    // Override the system's screen scaling
+    for i in 0..app::screen_count() {
+        app::set_screen_scale(i, 1.0);
+    }
+
     // Channel 1: Feeds Tree and the Add Feed Window's Input Widget / OK Button
     let (s_ch1, r_ch1) = app::channel::<String>();
 
