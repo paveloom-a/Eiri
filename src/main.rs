@@ -22,9 +22,6 @@ fn main() {
         app::set_screen_scale(i, 1.0);
     }
 
-    // Channel 1: Feeds Tree and the Add Feed Window's Input Widget / OK Button
-    let (s_ch1, r_ch1) = app::channel::<String>();
-
     // 0. App
     let app = ui::app::new();
 
@@ -93,7 +90,7 @@ fn main() {
     // Hidden windows
 
     // 1. Add Feed Window
-    let add_feed_window = ui::feeds::add_feed_window(&s_ch1, &window_icon);
+    let (add_feed_window, r_ch1) = ui::feeds::add_feed_window(&window_icon);
 
     // Redirect the signals to other windows
     window.handle(move |_, ev| {

@@ -1,5 +1,5 @@
 use fltk::{
-    app::{self, Sender},
+    app::{self, Receiver},
     button::Button,
     enums::{Align, CallbackTrigger, Color, FrameType, Shortcut},
     frame::Frame,
@@ -63,7 +63,11 @@ pub fn menubar(options: &Options) -> MenuBar {
 }
 
 /// Create the Add Feed Window (created by the Add Feed Button in the Menu Bar)
-pub fn add_feed_window(s: &Sender<String>, window_icon: &PngImage) -> Window {
+pub fn add_feed_window(window_icon: &PngImage) -> (Window, Receiver<String>) {
+    // Channel 1: Feeds Tree and the Add Feed Window's Input Widget / OK Button
+    let (s_1, r) = app::channel::<String>();
+    let s_2 = s_1.clone();
+
     // 1. Window
     let mut window = Window::default()
         .with_size(300, 200)
@@ -97,7 +101,6 @@ pub fn add_feed_window(s: &Sender<String>, window_icon: &PngImage) -> Window {
     input.set_trigger(CallbackTrigger::EnterKeyAlways);
     window.resizable(&input);
 
-    let s_1 = s.clone();
     input.set_callback(move |i| {
         app::handle_main(events::HIDE_ADD_FEED_WINDOW).unwrap();
         s_1.send(i.value());
@@ -117,7 +120,6 @@ pub fn add_feed_window(s: &Sender<String>, window_icon: &PngImage) -> Window {
     // 1.2.2 OK Button
     let mut ok_button = Button::default().with_size(80, 0).with_label("OK");
 
-    let s_2 = s.clone();
     ok_button.set_callback(move |_| {
         app::handle_main(events::HIDE_ADD_FEED_WINDOW).unwrap();
         s_2.send(input.value());
@@ -128,7 +130,7 @@ pub fn add_feed_window(s: &Sender<String>, window_icon: &PngImage) -> Window {
     buttons_pack.resizable(&resizable_box);
 
     window.end();
-    window
+    (window, r)
 }
 
 /// Create a Feeds' Horizontal Border (supposed to be a child of the Feeds Pack)
