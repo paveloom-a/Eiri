@@ -115,6 +115,7 @@
 
 use fltk::{
     app::{self, App},
+    button::Button,
     enums::CallbackTrigger,
     input::Input,
     prelude::*,
@@ -125,15 +126,21 @@ fn main() {
     let app = App::default();
 
     let mut my_window = Window::new(100, 100, 400, 300, "My Window");
-    let mut input = Input::new(160, 200, 80, 40, "Type in me!");
+    let mut input = Input::new(160, 100, 80, 40, "Type in me!");
+    let mut button = Button::new(160, 150, 60, 40, "Send!");
     my_window.end();
     my_window.show();
 
-    let (s, r) = app::channel::<String>();
+    let (s_1, r) = app::channel::<String>();
+    let s_2 = s_1.clone();
 
     input.set_trigger(CallbackTrigger::EnterKeyAlways);
     input.set_callback(move |i| {
-        s.send(i.value());
+        s_1.send(i.value());
+    });
+
+    button.set_callback(move |_| {
+        s_2.send(input.value());
     });
 
     while app.wait() {
