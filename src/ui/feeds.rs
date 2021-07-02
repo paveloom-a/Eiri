@@ -104,7 +104,7 @@ pub fn add_feed_window(window_icon: &PngImage) -> (Window, Receiver<String>) {
     input.set_callback(move |i| {
         app::handle_main(events::HIDE_ADD_FEED_WINDOW).unwrap();
         s_1.send(i.value());
-        println!("Sent the path.");
+        println!("Sent the path: {}", i.value());
         i.set_value("");
     });
 
@@ -123,6 +123,7 @@ pub fn add_feed_window(window_icon: &PngImage) -> (Window, Receiver<String>) {
     ok_button.set_callback(move |_| {
         app::handle_main(events::HIDE_ADD_FEED_WINDOW).unwrap();
         s_2.send(input.value());
+        println!("Sent the path: {}", input.value());
         input.set_value("");
     });
 
