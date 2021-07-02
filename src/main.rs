@@ -114,7 +114,7 @@
 // }
 
 use fltk::{
-    app::{self, App},
+    app::{self, App, Receiver},
     button::Button,
     enums::CallbackTrigger,
     input::Input,
@@ -122,29 +122,31 @@ use fltk::{
     window::Window,
 };
 
+const SHOW_SIGNAL: i32 = 1000;
+const HIDE_SIGNAL: i32 = 1001;
+
 fn main() {
     let app = App::default();
 
     let mut main_window = Window::new(100, 100, 400, 300, "Main Window");
+    let mut button = Button::new(160, 150, 60, 40, "Open!");
     main_window.end();
     main_window.show();
 
-    let mut second_window = Window::new(200, 200, 400, 300, "Second Window");
-    let mut input = Input::new(160, 100, 80, 40, "");
-    let mut button = Button::new(160, 150, 60, 40, "Send!");
-    second_window.end();
-    second_window.show();
-
-    let (s_1, r) = app::channel::<String>();
-    let s_2 = s_1.clone();
-
-    input.set_trigger(CallbackTrigger::EnterKeyAlways);
-    input.set_callback(move |i| {
-        s_1.send(i.value());
+    button.set_callback(|_| {
+        app::handle_main(SHOW_SIGNAL).unwrap();
     });
 
-    button.set_callback(move |_| {
-        s_2.send(input.value());
+    let (second_window, r) = second_window();
+
+    main_window.handle(move |_, ev| {
+        let mut rv: bool = false;
+        let ev = ev.bits();
+        if ev == SHOW_SIGNAL {
+            app::handle(ev, &second_window).unwrap();
+            rv = true;
+        }
+        rv
     });
 
     while app.wait() {
@@ -152,4 +154,43 @@ fn main() {
             println!("Got {}.", msg);
         }
     }
+}
+
+fn second_window() -> (Window, Receiver<String>) {
+    let mut second_window = Window::new(200, 200, 400, 300, "Second Window");
+    let mut input = Input::new(160, 100, 80, 40, "");
+    let mut button = Button::new(160, 150, 60, 40, "Send!");
+    second_window.end();
+
+    let (s_1, r) = app::channel::<String>();
+    let s_2 = s_1.clone();
+
+    input.set_trigger(CallbackTrigger::EnterKeyAlways);
+    input.set_callback(move |i| {
+        s_1.send(i.value());
+        app::handle_main(HIDE_SIGNAL).unwrap();
+    });
+
+    button.set_callback(move |_| {
+        s_2.send(input.value());
+        app::handle_main(HIDE_SIGNAL).unwrap();
+    });
+
+    second_window.handle(move |w, ev| {
+        let mut rv: bool = false;
+        match ev.bits() {
+            SHOW_SIGNAL => {
+                w.show();
+                rv = true;
+            }
+            HIDE_SIGNAL => {
+                w.hide();
+                rv = true;
+            }
+            _ => (),
+        }
+        rv
+    });
+
+    (second_window, r)
 }
