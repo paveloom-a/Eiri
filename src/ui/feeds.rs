@@ -102,9 +102,9 @@ pub fn add_feed_window(window_icon: &PngImage) -> (Window, Receiver<String>) {
     window.resizable(&input);
 
     input.set_callback(move |i| {
-        app::handle_main(events::HIDE_ADD_FEED_WINDOW).unwrap();
         s_1.send(i.value());
         println!("Sent the path: {}", i.value());
+        app::handle_main(events::HIDE_ADD_FEED_WINDOW).unwrap();
         i.set_value("");
     });
 
@@ -121,9 +121,9 @@ pub fn add_feed_window(window_icon: &PngImage) -> (Window, Receiver<String>) {
     let mut ok_button = Button::default().with_size(80, 0).with_label("OK");
 
     ok_button.set_callback(move |_| {
-        app::handle_main(events::HIDE_ADD_FEED_WINDOW).unwrap();
         s_2.send(input.value());
         println!("Sent the path: {}", input.value());
+        app::handle_main(events::HIDE_ADD_FEED_WINDOW).unwrap();
         input.set_value("");
     });
 
