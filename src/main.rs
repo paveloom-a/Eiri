@@ -130,7 +130,9 @@ fn main() {
 
     let (s, r) = app::channel();
 
-    but.emit(s, true);
+    but.set_callback(move |_| {
+        s.send(true);
+    });
 
     while app.wait() {
         if let Some(msg) = r.recv() {
