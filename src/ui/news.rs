@@ -40,6 +40,8 @@ pub fn vertical_border(options: &Options) -> Frame {
 
 /// Create a Menu Bar (supposed to be a child of the News Pack)
 pub fn menubar(options: &Options) -> MenuBar {
+    let _top_border = horizontal_border(&options);
+
     let mut news_menubar = MenuBar::default().with_size(0, options.menubar_height);
     news_menubar.set_frame(FrameType::FlatBox);
     news_menubar.end();
@@ -50,6 +52,8 @@ pub fn menubar(options: &Options) -> MenuBar {
         MenuFlag::Normal,
         |_| println!("Read pressed!"),
     );
+
+    let _bottom_border = horizontal_border(&options);
 
     news_menubar
 }
@@ -63,11 +67,8 @@ pub fn horizontal_border(options: &Options) -> Frame {
 }
 
 /// Create a News Feed (supposed to be a child of the News Pack)
-pub fn feed(window: &Window, options: &Options) -> TableRow {
-    let mut news_feed = TableRow::default().with_size(
-        0,
-        window.height() - options.menubar_height - options.horizontal_border_height,
-    );
+pub fn feed() -> TableRow {
+    let mut news_feed = TableRow::default();
     news_feed.set_type(TableRowSelectMode::Multi);
     news_feed.end();
     news_feed

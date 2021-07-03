@@ -26,11 +26,11 @@ fn main() {
     let app = ui::app::new();
 
     // 1. Window
-    let window_icon = ui::window::icon();
-    let mut window = ui::window::new(&window_icon, &OPTIONS);
+    let window_icon = ui::windows::icon();
+    let mut window = ui::windows::new(&window_icon, &OPTIONS);
 
     // 2. Window Tile
-    let window_tile = ui::window::tile(&window, &OPTIONS);
+    let window_tile = ui::windows::tile(&window, &OPTIONS);
 
     // 2.1 Feeds Pane
     let feeds = ui::feeds::new(&window, &OPTIONS);
@@ -41,11 +41,8 @@ fn main() {
     // 2.1.1.1 Feeds MenuBar
     let feeds_menubar = ui::feeds::menubar(&OPTIONS);
 
-    // 2.1.1.2 Feeds' Horizontal Border
-    let _feeds_horizontal_border = ui::feeds::horizontal_border(&OPTIONS);
-
-    // 2.1.1.3 Feeds Tree
-    let mut feeds_tree = ui::feeds::tree(&window, &OPTIONS);
+    // 2.1.1.2 Feeds Tree
+    let mut feeds_tree = ui::feeds::tree();
 
     feeds_pack.resizable(&feeds_menubar);
     feeds_pack.resizable(&feeds_tree);
@@ -69,11 +66,8 @@ fn main() {
     // 2.2.2.1 News MenuBar
     let news_menubar = ui::news::menubar(&OPTIONS);
 
-    // 2.2.2.2 News' Horizontal Border
-    let _news_horizontal_border = ui::news::horizontal_border(&OPTIONS);
-
-    // 2.2.2.3 News Feed
-    let news_feed = ui::news::feed(&window, &OPTIONS);
+    // 2.2.2.2 News Feed
+    let news_feed = ui::news::feed();
 
     news_pack.resizable(&news_menubar);
     news_pack.resizable(&news_feed);
@@ -90,7 +84,7 @@ fn main() {
     // Hidden windows
 
     // 1. Add Feed Window
-    let (add_feed_window, r_ch1) = ui::feeds::add_feed_window(&window_icon);
+    let (add_feed_window, r_ch1) = ui::windows::add_feed(&window_icon);
 
     // Redirect the signals to other windows
     window.handle(move |_, ev| {
@@ -106,7 +100,6 @@ fn main() {
     // Start the event loop
     while app.wait() {
         if let Ok(path) = r_ch1.try_recv() {
-            println!("Received the path: {}", path);
             feeds_tree.add(path.as_str());
             feeds_tree.redraw();
         }

@@ -1,12 +1,8 @@
-use crossbeam_channel::{self, Receiver};
 use fltk::{
     app,
-    button::Button,
-    enums::{Align, CallbackTrigger, Color, FrameType, Shortcut},
+    enums::{Color, FrameType, Shortcut},
     frame::Frame,
     group::{Pack, PackType},
-    image::PngImage,
-    input::Input,
     menu::{MenuBar, MenuFlag},
     prelude::*,
     tree::Tree,
@@ -41,6 +37,8 @@ pub fn vertical_border(options: &Options) -> Frame {
 
 /// Create a Menu Bar (supposed to be a child of the Feeds Pack)
 pub fn menubar(options: &Options) -> MenuBar {
+    let _top_border = horizontal_border(options);
+
     let mut feeds_menubar = MenuBar::default().with_size(0, options.menubar_height);
     feeds_menubar.set_frame(FrameType::FlatBox);
     feeds_menubar.end();
@@ -61,79 +59,9 @@ pub fn menubar(options: &Options) -> MenuBar {
         |_| println!("Add Folder pressed!"),
     );
 
+    let _bottom_border = horizontal_border(options);
+
     feeds_menubar
-}
-
-/// Create the Add Feed Window (created by the Add Feed Button in the Menu Bar)
-pub fn add_feed_window(window_icon: &PngImage) -> (Window, Receiver<String>) {
-    // Channel 1: Feeds Tree and the Add Feed Window's Input Widget / OK Button
-    let (s_1, r) = crossbeam_channel::unbounded::<String>();
-    let s_2 = s_1.clone();
-
-    // 1. Window
-    let mut window = Window::default()
-        .with_size(300, 200)
-        .center_screen()
-        .with_label("Add feed");
-    window.size_range(300, 200, 0, 200);
-    window.set_icon(Some(window_icon.clone()));
-    window.make_resizable(true);
-    window.make_modal(true);
-
-    window.handle(move |w, ev| {
-        let mut rv: bool = false;
-        match ev.bits() {
-            events::SHOW_ADD_FEED_WINDOW => {
-                w.show();
-                rv = true;
-            }
-            events::HIDE_ADD_FEED_WINDOW => {
-                w.hide();
-                rv = true;
-            }
-            _ => (),
-        }
-        rv
-    });
-
-    // 1.1 Input
-    let mut input = Input::new(20, 50, window.width() - 40, 25, "Feed URL:");
-    input.set_align(Align::TopLeft);
-    input.set_frame(FrameType::BorderBox);
-    input.set_trigger(CallbackTrigger::EnterKeyAlways);
-    window.resizable(&input);
-
-    input.set_callback(move |i| {
-        s_1.send(i.value()).ok();
-        println!("Sent the path: {}", i.value());
-        app::handle_main(events::HIDE_ADD_FEED_WINDOW).unwrap();
-        i.set_value("");
-    });
-
-    // 1.2 Buttons' Pack
-    let mut buttons_pack = Pack::default()
-        .with_pos(195, window.height() - 40)
-        .with_size(85, 25);
-    buttons_pack.set_type(PackType::Horizontal);
-
-    // 1.2.1 Resizable Box
-    let resizable_box = Frame::default().with_size(5, 0);
-
-    // 1.2.2 OK Button
-    let mut ok_button = Button::default().with_size(80, 0).with_label("OK");
-
-    ok_button.set_callback(move |_| {
-        s_2.send(input.value()).ok();
-        println!("Sent the path: {}", input.value());
-        app::handle_main(events::HIDE_ADD_FEED_WINDOW).unwrap();
-        input.set_value("");
-    });
-
-    buttons_pack.end();
-    buttons_pack.resizable(&resizable_box);
-
-    window.end();
-    (window, r)
 }
 
 /// Create a Feeds' Horizontal Border (supposed to be a child of the Feeds Pack)
@@ -145,11 +73,8 @@ pub fn horizontal_border(options: &Options) -> Frame {
 }
 
 /// Create a Feeds Tree (supposed to be a child of the Feeds Pack)
-pub fn tree(window: &Window, options: &Options) -> Tree {
-    let mut feeds_tree = Tree::default().with_size(
-        0,
-        window.height() - options.menubar_height - options.horizontal_border_height,
-    );
+pub fn tree() -> Tree {
+    let mut feeds_tree = Tree::default();
     feeds_tree.set_frame(FrameType::FlatBox);
     feeds_tree.set_show_root(false);
     feeds_tree.end();
