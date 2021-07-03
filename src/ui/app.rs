@@ -18,6 +18,6 @@ pub fn new() -> App {
     let app = App::default();
     app::background(255, 255, 255);
     app::set_visible_focus(false);
-    app::set_frame_type(FrameType::FlatBox);
+    app::set_frame_type(FrameType::BorderBox);
     app
 }

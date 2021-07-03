@@ -41,6 +41,7 @@ pub fn vertical_border(options: &Options) -> Frame {
 /// Create a Menu Bar (supposed to be a child of the News Pack)
 pub fn menubar(options: &Options) -> MenuBar {
     let mut news_menubar = MenuBar::default().with_size(0, options.menubar_height);
+    news_menubar.set_frame(FrameType::FlatBox);
     news_menubar.end();
 
     news_menubar.add(

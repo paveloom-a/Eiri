@@ -1,5 +1,6 @@
+use crossbeam_channel::{self, Receiver};
 use fltk::{
-    app::{self, Receiver},
+    app,
     button::Button,
     enums::{Align, CallbackTrigger, Color, FrameType, Shortcut},
     frame::Frame,
@@ -41,6 +42,7 @@ pub fn vertical_border(options: &Options) -> Frame {
 /// Create a Menu Bar (supposed to be a child of the Feeds Pack)
 pub fn menubar(options: &Options) -> MenuBar {
     let mut feeds_menubar = MenuBar::default().with_size(0, options.menubar_height);
+    feeds_menubar.set_frame(FrameType::FlatBox);
     feeds_menubar.end();
 
     feeds_menubar.add(
@@ -65,7 +67,7 @@ pub fn menubar(options: &Options) -> MenuBar {
 /// Create the Add Feed Window (created by the Add Feed Button in the Menu Bar)
 pub fn add_feed_window(window_icon: &PngImage) -> (Window, Receiver<String>) {
     // Channel 1: Feeds Tree and the Add Feed Window's Input Widget / OK Button
-    let (s_1, r) = app::channel::<String>();
+    let (s_1, r) = crossbeam_channel::unbounded::<String>();
     let s_2 = s_1.clone();
 
     // 1. Window
@@ -102,7 +104,7 @@ pub fn add_feed_window(window_icon: &PngImage) -> (Window, Receiver<String>) {
     window.resizable(&input);
 
     input.set_callback(move |i| {
-        s_1.send(i.value());
+        s_1.send(i.value()).ok();
         println!("Sent the path: {}", i.value());
         app::handle_main(events::HIDE_ADD_FEED_WINDOW).unwrap();
         i.set_value("");
@@ -121,7 +123,7 @@ pub fn add_feed_window(window_icon: &PngImage) -> (Window, Receiver<String>) {
     let mut ok_button = Button::default().with_size(80, 0).with_label("OK");
 
     ok_button.set_callback(move |_| {
-        s_2.send(input.value());
+        s_2.send(input.value()).ok();
         println!("Sent the path: {}", input.value());
         app::handle_main(events::HIDE_ADD_FEED_WINDOW).unwrap();
         input.set_value("");
