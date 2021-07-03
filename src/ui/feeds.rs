@@ -1,11 +1,11 @@
 use fltk::{
-    app,
-    enums::{Color, FrameType, Shortcut},
+    app::{self, event_key},
+    enums::{Color, Event, FrameType, Key, Shortcut},
     frame::Frame,
     group::{Pack, PackType},
     menu::{MenuBar, MenuFlag},
     prelude::*,
-    tree::Tree,
+    tree::{Tree, TreeItemReselectMode, TreeReason, TreeSelect},
     window::Window,
 };
 
@@ -44,16 +44,16 @@ pub fn menubar(options: &Options) -> MenuBar {
     feeds_menubar.end();
 
     feeds_menubar.add(
-        "@#+/Add Feed...",
+        "@#+/Add Feed\t",
         Shortcut::from_char('a'),
         MenuFlag::Normal,
         |_| {
-            app::handle_main(events::SHOW_ADD_FEED_WINDOW).unwrap();
+            app::handle_main(events::SHOW_ADD_FEED_WINDOW).ok();
         },
     );
 
     feeds_menubar.add(
-        "@#+/Add Folder...",
+        "@#+/Add Folder\t",
         Shortcut::from_char('f'),
         MenuFlag::Normal,
         |_| println!("Add Folder pressed!"),
@@ -77,6 +77,54 @@ pub fn tree() -> Tree {
     let mut feeds_tree = Tree::default();
     feeds_tree.set_frame(FrameType::FlatBox);
     feeds_tree.set_show_root(false);
+    feeds_tree.set_select_mode(TreeSelect::SingleDraggable);
+    feeds_tree.set_item_reselect_mode(TreeItemReselectMode::Always);
     feeds_tree.end();
+
+    feeds_tree.set_callback(|t| {
+        if t.select_mode() == TreeSelect::SingleDraggable
+            && (t.callback_reason() == TreeReason::Selected
+                || t.callback_reason() == TreeReason::Reselected)
+        {
+            if let Some(item) = &t.get_item_focus() {
+                if let Some(label) = item.label() {
+                    println!("Selected an item with label \"{}\".", label);
+                }
+            }
+        }
+    });
+
+    feeds_tree.handle(|t, ev| match ev {
+        Event::KeyDown => match event_key() {
+            Key::ControlL | Key::ShiftL => {
+                t.set_select_mode(TreeSelect::Multi);
+                true
+            }
+            Key::Enter => {
+                if let Some(item) = &t.get_item_focus() {
+                    t.select_only(item, false).ok();
+                    if let Some(label) = item.label() {
+                        println!("Selected an item with label \"{}\".", label);
+                        true
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+            }
+            _ => false,
+        },
+        Event::KeyUp => {
+            if event_key() == Key::ControlL | Key::ShiftL {
+                t.set_select_mode(TreeSelect::SingleDraggable);
+                true
+            } else {
+                false
+            }
+        }
+        _ => false,
+    });
+
     feeds_tree
 }

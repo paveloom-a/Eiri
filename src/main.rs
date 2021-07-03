@@ -27,7 +27,7 @@ fn main() {
 
     // 1. Window
     let window_icon = ui::windows::icon();
-    let mut window = ui::windows::new(&window_icon, &OPTIONS);
+    let mut window = ui::windows::main(&window_icon, &OPTIONS);
 
     // 2. Window Tile
     let window_tile = ui::windows::tile(&window, &OPTIONS);
@@ -88,13 +88,13 @@ fn main() {
 
     // Redirect the signals to other windows
     window.handle(move |_, ev| {
-        let mut rv: bool = false;
         let ev = ev.bits();
         if ev == events::SHOW_ADD_FEED_WINDOW {
-            app::handle(ev, &add_feed_window).unwrap();
-            rv = true;
+            app::handle(ev, &add_feed_window).ok();
+            true
+        } else {
+            false
         }
-        rv
     });
 
     // Start the event loop

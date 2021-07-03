@@ -20,7 +20,7 @@ pub fn icon() -> PngImage {
 }
 
 /// Create the Main Window
-pub fn new(window_icon: &PngImage, options: &Options) -> DoubleWindow {
+pub fn main(window_icon: &PngImage, options: &Options) -> DoubleWindow {
     let mut window = Window::new(
         100,
         100,
@@ -64,20 +64,16 @@ pub fn add_feed(window_icon: &PngImage) -> (Window, Receiver<String>) {
     window.make_resizable(true);
     window.make_modal(true);
 
-    window.handle(move |w, ev| {
-        let mut rv: bool = false;
-        match ev.bits() {
-            events::SHOW_ADD_FEED_WINDOW => {
-                w.show();
-                rv = true;
-            }
-            events::HIDE_ADD_FEED_WINDOW => {
-                w.hide();
-                rv = true;
-            }
-            _ => (),
+    window.handle(move |w, ev| match ev.bits() {
+        events::SHOW_ADD_FEED_WINDOW => {
+            w.show();
+            true
         }
-        rv
+        events::HIDE_ADD_FEED_WINDOW => {
+            w.hide();
+            true
+        }
+        _ => false,
     });
 
     // 1.1 Input
@@ -89,7 +85,7 @@ pub fn add_feed(window_icon: &PngImage) -> (Window, Receiver<String>) {
 
     input.set_callback(move |i| {
         s_1.send(i.value()).ok();
-        app::handle_main(events::HIDE_ADD_FEED_WINDOW).unwrap();
+        app::handle_main(events::HIDE_ADD_FEED_WINDOW).ok();
         i.set_value("");
     });
 
@@ -105,9 +101,10 @@ pub fn add_feed(window_icon: &PngImage) -> (Window, Receiver<String>) {
     // 1.2.2 OK Button
     let mut ok_button = Button::default().with_size(80, 0).with_label("OK");
 
+    ok_button.visible_focus(false);
     ok_button.set_callback(move |_| {
         s_2.send(input.value()).ok();
-        app::handle_main(events::HIDE_ADD_FEED_WINDOW).unwrap();
+        app::handle_main(events::HIDE_ADD_FEED_WINDOW).ok();
         input.set_value("");
     });
 
