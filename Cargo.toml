@@ -29,5 +29,5 @@ codegen-units = 1
 panic = 'abort'
 
 [dependencies]
-fltk = { version = "~1.0.21", features = ["fltk-bundled", "use-ninja"] }
+fltk = { version = "~1.0.22", features = ["fltk-bundled", "use-ninja"] }
 crossbeam-channel = {version = "~0.5.1"}

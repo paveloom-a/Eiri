@@ -138,6 +138,7 @@ pub fn tree(channels: &Channels) -> Tree {
                 events::ADD_FEED_EVENT => {
                     if let Ok(path) = add_feed_input_receiver.try_recv() {
                         t.add(path.as_str());
+                        t.redraw();
                         true
                     } else {
                         false
@@ -146,6 +147,7 @@ pub fn tree(channels: &Channels) -> Tree {
                 events::ADD_FOLDER_EVENT => {
                     if let Ok(path) = add_folder_input_receiver.try_recv() {
                         t.add(path.as_str());
+                        t.redraw();
                         true
                     } else {
                         false
