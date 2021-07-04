@@ -7,15 +7,8 @@ mod ui;
 use fltk::{app, prelude::*};
 
 fn main() {
-    // The app's Options
-    const OPTIONS: ui::app::Options = ui::app::Options {
-        window_min_width: 1000,
-        window_min_height: 600,
-        feeds_width: 200,
-        menubar_height: 30,
-        vertical_border_width: 2,
-        horizontal_border_height: 4,
-    };
+    // Application channels
+    let channels = ui::app::Channels::default();
 
     // Override the system's screen scaling
     for i in 0..app::screen_count() {
@@ -27,44 +20,44 @@ fn main() {
 
     // 1. Window
     let window_icon = ui::windows::icon();
-    let mut window = ui::windows::main(&window_icon, &OPTIONS);
+    let mut window = ui::windows::main(&window_icon);
 
     // 2. Window Tile
-    let window_tile = ui::windows::tile(&window, &OPTIONS);
+    let window_tile = ui::windows::tile(&window);
 
     // 2.1 Feeds Pane
-    let feeds = ui::feeds::new(&window, &OPTIONS);
+    let feeds = ui::feeds::new(&window);
 
     // 2.1.1 Feeds Pack
-    let feeds_pack = ui::feeds::pack(&OPTIONS);
+    let feeds_pack = ui::feeds::pack();
 
     // 2.1.1.1 Feeds MenuBar
-    let feeds_menubar = ui::feeds::menubar(&OPTIONS);
+    let feeds_menubar = ui::feeds::menubar(&channels);
 
     // 2.1.1.2 Feeds Tree
-    let mut feeds_tree = ui::feeds::tree();
+    let feeds_tree = ui::feeds::tree(&channels);
 
     feeds_pack.resizable(&feeds_menubar);
     feeds_pack.resizable(&feeds_tree);
     feeds_pack.end();
 
     // 2.1.2 Feeds' Vertical Border
-    let _feeds_vertical_border = ui::feeds::vertical_border(&OPTIONS);
+    let _feeds_vertical_border = ui::feeds::vertical_border();
 
     feeds.resizable(&feeds_pack);
     feeds.end();
 
     // 2.2 News Pane
-    let news = ui::news::new(&window, &OPTIONS);
+    let news = ui::news::new(&window);
 
     // 2.2.1 News' Vertical Border
-    let _news_vertical_border = ui::news::vertical_border(&OPTIONS);
+    let _news_vertical_border = ui::news::vertical_border();
 
     // 2.2.2 News Pack
-    let news_pack = ui::news::pack(&window, &OPTIONS);
+    let news_pack = ui::news::pack(&window);
 
     // 2.2.2.1 News MenuBar
-    let news_menubar = ui::news::menubar(&OPTIONS);
+    let news_menubar = ui::news::menubar();
 
     // 2.2.2.2 News Feed
     let news_feed = ui::news::feed();
@@ -84,24 +77,22 @@ fn main() {
     // Hidden windows
 
     // 1. Add Feed Window
-    let (add_feed_window, r_ch1) = ui::windows::add_feed(&window_icon);
+    let add_feed_window = ui::windows::add_feed(&window_icon, &channels);
 
-    // Redirect the signals to other windows
-    window.handle(move |_, ev| {
-        let ev = ev.bits();
-        if ev == events::SHOW_ADD_FEED_WINDOW {
-            app::handle(ev, &add_feed_window).ok();
-            true
-        } else {
-            false
-        }
-    });
+    // 2. Add Folder Window
+    let add_folder_window = ui::windows::add_folder(&window_icon, &channels);
 
     // Start the event loop
     while app.wait() {
-        if let Ok(path) = r_ch1.try_recv() {
-            feeds_tree.add(path.as_str());
-            feeds_tree.redraw();
+        // Retranslation of signals between windows
+        if let Ok(event) = channels.mw_signal_receiver.try_recv() {
+            app::handle_main(event).ok();
+        };
+        if let Ok(event) = channels.mw_a_feed_w_translator.try_recv() {
+            app::handle(event, &add_feed_window).ok();
+        }
+        if let Ok(event) = channels.mw_a_folder_w_translator.try_recv() {
+            app::handle(event, &add_folder_window).ok();
         }
     }
 }

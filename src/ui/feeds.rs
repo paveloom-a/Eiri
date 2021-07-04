@@ -1,5 +1,5 @@
 use fltk::{
-    app::{self, event_key},
+    app::event_key,
     enums::{Color, Event, FrameType, Key, Shortcut},
     frame::Frame,
     group::{Pack, PackType},
@@ -9,13 +9,13 @@ use fltk::{
     window::Window,
 };
 
-use super::app::Options;
+use super::app::{Channels, OPTIONS};
 use crate::events;
 
 /// Create a Feeds Pane
-pub fn new(window: &Window, options: &Options) -> Pack {
+pub fn new(window: &Window) -> Pack {
     let mut feeds = Pack::default().with_size(
-        options.feeds_width + options.vertical_border_width,
+        OPTIONS.feeds_width + OPTIONS.vertical_border_width,
         window.height(),
     );
     feeds.set_type(PackType::Horizontal);
@@ -23,23 +23,23 @@ pub fn new(window: &Window, options: &Options) -> Pack {
 }
 
 /// Create a Feeds Pack (supposed to be a child of the Feeds Pane)
-pub fn pack(options: &Options) -> Pack {
-    Pack::default().with_size(options.feeds_width, 0)
+pub fn pack() -> Pack {
+    Pack::default().with_size(OPTIONS.feeds_width, 0)
 }
 
 /// Create a Feeds' Vertical Border (supposed to be a child of the Feeds Pane)
-pub fn vertical_border(options: &Options) -> Frame {
-    let mut vertical_border = Frame::default().with_size(options.vertical_border_width, 0);
+pub fn vertical_border() -> Frame {
+    let mut vertical_border = Frame::default().with_size(OPTIONS.vertical_border_width, 0);
     vertical_border.set_frame(FrameType::FlatBox);
     vertical_border.set_color(Color::from_hex(0xF0_F0_F0));
     vertical_border
 }
 
 /// Create a Menu Bar (supposed to be a child of the Feeds Pack)
-pub fn menubar(options: &Options) -> MenuBar {
-    let _top_border = horizontal_border(options);
+pub fn menubar(channels: &Channels) -> MenuBar {
+    let _top_border = horizontal_border();
 
-    let mut feeds_menubar = MenuBar::default().with_size(0, options.menubar_height);
+    let mut feeds_menubar = MenuBar::default().with_size(0, OPTIONS.menubar_height);
     feeds_menubar.set_frame(FrameType::FlatBox);
     feeds_menubar.end();
 
@@ -47,8 +47,11 @@ pub fn menubar(options: &Options) -> MenuBar {
         "@#+/Add Feed\t",
         Shortcut::from_char('a'),
         MenuFlag::Normal,
-        |_| {
-            app::handle_main(events::SHOW_ADD_FEED_WINDOW).ok();
+        {
+            let s = channels.a_feed_w_signal.clone();
+            move |_| {
+                s.try_send(events::SHOW_ADD_FEED_WINDOW).ok();
+            }
         },
     );
 
@@ -56,24 +59,29 @@ pub fn menubar(options: &Options) -> MenuBar {
         "@#+/Add Folder\t",
         Shortcut::from_char('f'),
         MenuFlag::Normal,
-        |_| println!("Add Folder pressed!"),
+        {
+            let s = channels.a_folder_w_signal.clone();
+            move |_| {
+                s.try_send(events::SHOW_ADD_FOLDER_WINDOW).ok();
+            }
+        },
     );
 
-    let _bottom_border = horizontal_border(options);
+    let _bottom_border = horizontal_border();
 
     feeds_menubar
 }
 
 /// Create a Feeds' Horizontal Border (supposed to be a child of the Feeds Pack)
-pub fn horizontal_border(options: &Options) -> Frame {
-    let mut horizontal_border = Frame::default().with_size(0, options.horizontal_border_height);
+pub fn horizontal_border() -> Frame {
+    let mut horizontal_border = Frame::default().with_size(0, OPTIONS.horizontal_border_height);
     horizontal_border.set_frame(FrameType::FlatBox);
     horizontal_border.set_color(Color::from_hex(0xF0_F0_F0));
     horizontal_border
 }
 
 /// Create a Feeds Tree (supposed to be a child of the Feeds Pack)
-pub fn tree() -> Tree {
+pub fn tree(channels: &Channels) -> Tree {
     let mut feeds_tree = Tree::default();
     feeds_tree.set_frame(FrameType::FlatBox);
     feeds_tree.set_show_root(false);
@@ -94,36 +102,58 @@ pub fn tree() -> Tree {
         }
     });
 
-    feeds_tree.handle(|t, ev| match ev {
-        Event::KeyDown => match event_key() {
-            Key::ControlL | Key::ShiftL => {
-                t.set_select_mode(TreeSelect::Multi);
-                true
-            }
-            Key::Enter => {
-                if let Some(item) = &t.get_item_focus() {
-                    t.select_only(item, false).ok();
-                    if let Some(label) = item.label() {
-                        println!("Selected an item with label \"{}\".", label);
-                        true
+    feeds_tree.handle({
+        let add_feed_input_receiver = channels.add_feed_input_receiver.clone();
+        let add_folder_input_receiver = channels.add_folder_input_receiver.clone();
+        move |t, ev| match ev {
+            Event::KeyDown => match event_key() {
+                Key::ControlL | Key::ShiftL => {
+                    t.set_select_mode(TreeSelect::Multi);
+                    true
+                }
+                Key::Enter => {
+                    if let Some(item) = &t.get_item_focus() {
+                        t.select_only(item, false).ok();
+                        if let Some(label) = item.label() {
+                            println!("Selected an item with label \"{}\".", label);
+                            true
+                        } else {
+                            false
+                        }
                     } else {
                         false
                     }
+                }
+                _ => false,
+            },
+            Event::KeyUp => {
+                if event_key() == Key::ControlL | Key::ShiftL {
+                    t.set_select_mode(TreeSelect::SingleDraggable);
+                    true
                 } else {
                     false
                 }
             }
-            _ => false,
-        },
-        Event::KeyUp => {
-            if event_key() == Key::ControlL | Key::ShiftL {
-                t.set_select_mode(TreeSelect::SingleDraggable);
-                true
-            } else {
-                false
-            }
+            _ => match ev.bits() {
+                events::ADD_FEED_EVENT => {
+                    if let Ok(path) = add_feed_input_receiver.try_recv() {
+                        t.add(path.as_str());
+                        true
+                    } else {
+                        false
+                    }
+                }
+                events::ADD_FOLDER_EVENT => {
+                    if let Ok(path) = add_folder_input_receiver.try_recv() {
+                        t.add(path.as_str());
+                        true
+                    } else {
+                        false
+                    }
+                }
+                _ => false,
+            },
         }
-        _ => false,
     });
 
     feeds_tree

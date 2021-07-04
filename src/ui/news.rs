@@ -8,14 +8,14 @@ use fltk::{
     window::Window,
 };
 
-use super::app::Options;
+use super::app::OPTIONS;
 
 /// Create a News Pane
-pub fn new(window: &Window, options: &Options) -> Pack {
+pub fn new(window: &Window) -> Pack {
     let mut news = Pack::default()
-        .with_pos(options.feeds_width + options.vertical_border_width, 0)
+        .with_pos(OPTIONS.feeds_width + OPTIONS.vertical_border_width, 0)
         .with_size(
-            window.width() - options.feeds_width - options.vertical_border_width,
+            window.width() - OPTIONS.feeds_width - OPTIONS.vertical_border_width,
             window.height(),
         );
     news.set_type(PackType::Horizontal);
@@ -23,26 +23,26 @@ pub fn new(window: &Window, options: &Options) -> Pack {
 }
 
 /// Create a News Pack (supposed to be a child of the News Pane)
-pub fn pack(window: &Window, options: &Options) -> Pack {
+pub fn pack(window: &Window) -> Pack {
     Pack::default().with_size(
-        window.width() - options.feeds_width - 2 * options.vertical_border_width,
+        window.width() - OPTIONS.feeds_width - 2 * OPTIONS.vertical_border_width,
         0,
     )
 }
 
 /// Create a News' Vertical Border (supposed to be a child of the News Pane)
-pub fn vertical_border(options: &Options) -> Frame {
-    let mut vertical_border = Frame::default().with_size(options.vertical_border_width, 0);
+pub fn vertical_border() -> Frame {
+    let mut vertical_border = Frame::default().with_size(OPTIONS.vertical_border_width, 0);
     vertical_border.set_frame(FrameType::FlatBox);
     vertical_border.set_color(Color::from_hex(0xF0_F0_F0));
     vertical_border
 }
 
 /// Create a Menu Bar (supposed to be a child of the News Pack)
-pub fn menubar(options: &Options) -> MenuBar {
-    let _top_border = horizontal_border(&options);
+pub fn menubar() -> MenuBar {
+    let _top_border = horizontal_border();
 
-    let mut news_menubar = MenuBar::default().with_size(0, options.menubar_height);
+    let mut news_menubar = MenuBar::default().with_size(0, OPTIONS.menubar_height);
     news_menubar.set_frame(FrameType::FlatBox);
     news_menubar.end();
 
@@ -53,14 +53,14 @@ pub fn menubar(options: &Options) -> MenuBar {
         |_| println!("Read pressed!"),
     );
 
-    let _bottom_border = horizontal_border(&options);
+    let _bottom_border = horizontal_border();
 
     news_menubar
 }
 
 /// Create a News' Horizontal Border (supposed to be a child of the News Pack)
-pub fn horizontal_border(options: &Options) -> Frame {
-    let mut horizontal_border = Frame::default().with_size(0, options.horizontal_border_height);
+pub fn horizontal_border() -> Frame {
+    let mut horizontal_border = Frame::default().with_size(0, OPTIONS.horizontal_border_height);
     horizontal_border.set_frame(FrameType::FlatBox);
     horizontal_border.set_color(Color::from_hex(0xF0_F0_F0));
     horizontal_border
