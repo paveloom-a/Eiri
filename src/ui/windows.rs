@@ -1,7 +1,7 @@
 use fltk::{
     app,
     button::Button,
-    enums::{Align, CallbackTrigger, FrameType},
+    enums::{Align, CallbackTrigger, Event, FrameType},
     frame::Frame,
     group::{Pack, PackType, Tile},
     image::PngImage,
@@ -90,6 +90,25 @@ pub fn add_feed(window_icon: &PngImage, channels: &Channels) -> Window {
     window.resizable(&input);
     window.end();
 
+    add_feed_logic(
+        channels,
+        &mut window,
+        &mut input,
+        &mut ok_button,
+        &mut cancel_button,
+    );
+
+    window
+}
+
+/// Add logic to the widgets of the Add Feed Window
+pub fn add_feed_logic(
+    channels: &Channels,
+    window: &mut Window,
+    input: &mut Input,
+    ok_button: &mut Button,
+    cancel_button: &mut Button,
+) {
     window.handle(move |w, ev| match ev.bits() {
         events::SHOW_ADD_FEED_WINDOW => {
             w.show();
@@ -104,25 +123,26 @@ pub fn add_feed(window_icon: &PngImage, channels: &Channels) -> Window {
 
     input.handle({
         let s = channels.add_feed.s.clone();
-        move |i, ev| match ev.bits() {
-            events::ADD_FEED_WINDOW_SEND_INPUT => {
-                s.try_send(i.value()).ok();
-                true
-            }
-            events::ADD_FEED_WINDOW_CLEAR_INPUT => {
+        move |i, ev| match ev {
+            Event::Hide => {
                 i.set_value("");
                 true
             }
-            _ => false,
+            _ => match ev.bits() {
+                events::ADD_FEED_WINDOW_SEND_INPUT => {
+                    s.try_send(i.value()).ok();
+                    true
+                }
+                _ => false,
+            },
         }
     });
 
     input.set_callback({
         let s = channels.mw.s.clone();
-        move |i| {
+        move |_| {
             app::handle_main(events::ADD_FEED_WINDOW_SEND_INPUT).ok();
             app::handle_main(events::HIDE_ADD_FEED_WINDOW).ok();
-            i.set_value("");
             s.try_send(events::ADD_FEED_EVENT).ok();
         }
     });
@@ -131,18 +151,14 @@ pub fn add_feed(window_icon: &PngImage, channels: &Channels) -> Window {
         let s = channels.mw.s.clone();
         move |_| {
             app::handle_main(events::ADD_FEED_WINDOW_SEND_INPUT).ok();
-            app::handle_main(events::ADD_FEED_WINDOW_CLEAR_INPUT).ok();
             app::handle_main(events::HIDE_ADD_FEED_WINDOW).ok();
             s.try_send(events::ADD_FEED_EVENT).ok();
         }
     });
 
     cancel_button.set_callback(|_| {
-        app::handle_main(events::ADD_FEED_WINDOW_CLEAR_INPUT).ok();
         app::handle_main(events::HIDE_ADD_FEED_WINDOW).ok();
     });
-
-    window
 }
 
 /// Create the Add Folder Window (open using the Add Folder Button in the Menu Bar)
@@ -200,6 +216,27 @@ pub fn add_folder(window_icon: &PngImage, channels: &Channels) -> Window {
     window.resizable(&location);
     window.end();
 
+    add_folder_logic(
+        channels,
+        &mut window,
+        &mut input,
+        &mut location,
+        &mut ok_button,
+        &mut cancel_button,
+    );
+
+    window
+}
+
+/// Add logic to the widgets of the Add Folder Window
+pub fn add_folder_logic(
+    channels: &Channels,
+    window: &mut Window,
+    input: &mut Input,
+    location: &mut Tree,
+    ok_button: &mut Button,
+    cancel_button: &mut Button,
+) {
     window.handle(move |w, ev| match ev.bits() {
         events::SHOW_ADD_FOLDER_WINDOW => {
             w.show();
@@ -214,26 +251,63 @@ pub fn add_folder(window_icon: &PngImage, channels: &Channels) -> Window {
 
     input.handle({
         let s = channels.add_folder.s.clone();
-        move |i, ev| match ev.bits() {
-            events::ADD_FOLDER_WINDOW_SEND_INPUT => {
-                s.try_send(i.value()).ok();
-                true
-            }
-            events::ADD_FOLDER_WINDOW_CLEAR_INPUT => {
+        move |i, ev| match ev {
+            Event::Hide => {
                 i.set_value("");
                 true
             }
-            _ => false,
+            _ => match ev.bits() {
+                events::ADD_FOLDER_WINDOW_SEND_INPUT => {
+                    s.try_send(i.value()).ok();
+                    true
+                }
+                _ => false,
+            },
         }
     });
 
     input.set_callback({
         let s = channels.mw.s.clone();
-        move |i| {
+        move |_| {
             app::handle_main(events::ADD_FOLDER_WINDOW_SEND_INPUT).ok();
             app::handle_main(events::HIDE_ADD_FOLDER_WINDOW).ok();
-            i.set_value("");
             s.try_send(events::ADD_FOLDER_EVENT).ok();
+        }
+    });
+
+    location.handle({
+        let r = channels.add_folder_location.r.clone();
+        move |l, ev| match ev {
+            Event::Hide => l.root().map_or(false, |root| {
+                l.clear_children(&root);
+                true
+            }),
+            _ => match ev.bits() {
+                events::ADD_FOLDER_WINDOW_LOAD_LOCATION => {
+                    if let Ok(items) = r.try_recv() {
+                        for mut item in items {
+                            let mut path = String::default();
+                            if let Some(label) = item.label() {
+                                path.push_str(label.as_str());
+                            }
+                            while let Some(parent) = item.parent() {
+                                if let Some(label) = parent.label() {
+                                    if label.is_empty() {
+                                        break;
+                                    }
+                                    path = label + "/" + &path;
+                                }
+                                item = parent;
+                            }
+                            l.add(path.as_str());
+                        }
+                        true
+                    } else {
+                        false
+                    }
+                }
+                _ => false,
+            },
         }
     });
 
@@ -241,16 +315,12 @@ pub fn add_folder(window_icon: &PngImage, channels: &Channels) -> Window {
         let s = channels.mw.s.clone();
         move |_| {
             app::handle_main(events::ADD_FOLDER_WINDOW_SEND_INPUT).ok();
-            app::handle_main(events::ADD_FOLDER_WINDOW_CLEAR_INPUT).ok();
             app::handle_main(events::HIDE_ADD_FOLDER_WINDOW).ok();
             s.try_send(events::ADD_FOLDER_EVENT).ok();
         }
     });
 
     cancel_button.set_callback(|_| {
-        app::handle_main(events::ADD_FOLDER_WINDOW_CLEAR_INPUT).ok();
         app::handle_main(events::HIDE_ADD_FOLDER_WINDOW).ok();
     });
-
-    window
 }

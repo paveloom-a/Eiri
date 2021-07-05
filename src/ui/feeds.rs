@@ -1,5 +1,5 @@
 use fltk::{
-    app::event_key,
+    app::{self, event_key},
     enums::{Color, Event, FrameType, Key, Shortcut},
     frame::Frame,
     group::{Pack, PackType},
@@ -63,6 +63,8 @@ pub fn menubar(channels: &Channels) -> MenuBar {
             let s = channels.add_folder_window.s.clone();
             move |_| {
                 s.try_send(events::SHOW_ADD_FOLDER_WINDOW).ok();
+                app::handle_main(events::ADD_FOLDER_WINDOW_LOAD_LOCATION).ok();
+                s.try_send(events::ADD_FOLDER_WINDOW_LOAD_LOCATION).ok();
             }
         },
     );
@@ -84,6 +86,7 @@ pub fn horizontal_border() -> Frame {
 pub fn tree(channels: &Channels) -> Tree {
     let mut feeds_tree = Tree::default();
     feeds_tree.set_frame(FrameType::FlatBox);
+    feeds_tree.set_root_label("");
     feeds_tree.set_show_root(false);
     feeds_tree.set_select_mode(TreeSelect::SingleDraggable);
     feeds_tree.set_item_reselect_mode(TreeItemReselectMode::Always);
@@ -104,6 +107,8 @@ pub fn tree(channels: &Channels) -> Tree {
 
     feeds_tree.handle({
         let add_feed_receiver = channels.add_feed.r.clone();
+
+        let add_folder_location_sender = channels.add_folder_location.s.clone();
         let add_folder_receiver = channels.add_folder.r.clone();
         move |t, ev| match ev {
             Event::KeyDown => match event_key() {
@@ -111,19 +116,13 @@ pub fn tree(channels: &Channels) -> Tree {
                     t.set_select_mode(TreeSelect::Multi);
                     true
                 }
-                Key::Enter => {
-                    if let Some(item) = &t.get_item_focus() {
-                        t.select_only(item, false).ok();
-                        if let Some(label) = item.label() {
-                            println!("Selected an item with label \"{}\".", label);
-                            true
-                        } else {
-                            false
-                        }
-                    } else {
-                        false
+                Key::Enter => t.get_item_focus().map_or(false, |item| {
+                    t.select_only(&item, false).ok();
+                    if let Some(label) = item.label() {
+                        println!("Selected an item with label \"{}\".", label);
                     }
-                }
+                    true
+                }),
                 _ => false,
             },
             Event::KeyUp => {
@@ -144,6 +143,10 @@ pub fn tree(channels: &Channels) -> Tree {
                         false
                     }
                 }
+                events::ADD_FOLDER_WINDOW_LOAD_LOCATION => t.get_items().map_or(false, |items| {
+                    add_folder_location_sender.try_send(items).ok();
+                    true
+                }),
                 events::ADD_FOLDER_EVENT => {
                     if let Ok(path) = add_folder_receiver.try_recv() {
                         t.add(path.as_str());

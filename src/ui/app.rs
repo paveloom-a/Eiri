@@ -2,6 +2,7 @@ use crossbeam_channel::{self, Receiver, Sender};
 use fltk::{
     app::{self, App},
     enums::FrameType,
+    tree::TreeItem,
 };
 
 /// A struct providing access to the application's options
@@ -85,6 +86,8 @@ channels_default_impl! {
         pub add_feed: Channel<String>,
         /// Channel 5: From Add Folder Window's Input Widget / OK Button to Feeds Tree
         pub add_folder: Channel<String>,
+        /// Channel 6: From Feeds Tree to Add Folder's Location
+        pub add_folder_location: Channel<Vec<TreeItem>>,
     }
 }
 
