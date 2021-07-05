@@ -85,13 +85,13 @@ fn main() {
     // Start the event loop
     while app.wait() {
         // Retranslation of signals between windows
-        if let Ok(event) = channels.mw_signal_receiver.try_recv() {
+        if let Ok(event) = channels.mw.r.try_recv() {
             app::handle_main(event).ok();
         };
-        if let Ok(event) = channels.mw_a_feed_w_translator.try_recv() {
+        if let Ok(event) = channels.add_feed_window.r.try_recv() {
             app::handle(event, &add_feed_window).ok();
         }
-        if let Ok(event) = channels.mw_a_folder_w_translator.try_recv() {
+        if let Ok(event) = channels.add_folder_window.r.try_recv() {
             app::handle(event, &add_folder_window).ok();
         }
     }

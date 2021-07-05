@@ -48,7 +48,7 @@ pub fn menubar(channels: &Channels) -> MenuBar {
         Shortcut::from_char('a'),
         MenuFlag::Normal,
         {
-            let s = channels.a_feed_w_signal.clone();
+            let s = channels.add_feed_window.s.clone();
             move |_| {
                 s.try_send(events::SHOW_ADD_FEED_WINDOW).ok();
             }
@@ -60,7 +60,7 @@ pub fn menubar(channels: &Channels) -> MenuBar {
         Shortcut::from_char('f'),
         MenuFlag::Normal,
         {
-            let s = channels.a_folder_w_signal.clone();
+            let s = channels.add_folder_window.s.clone();
             move |_| {
                 s.try_send(events::SHOW_ADD_FOLDER_WINDOW).ok();
             }
@@ -103,8 +103,8 @@ pub fn tree(channels: &Channels) -> Tree {
     });
 
     feeds_tree.handle({
-        let add_feed_input_receiver = channels.add_feed_input_receiver.clone();
-        let add_folder_input_receiver = channels.add_folder_input_receiver.clone();
+        let add_feed_receiver = channels.add_feed.r.clone();
+        let add_folder_receiver = channels.add_folder.r.clone();
         move |t, ev| match ev {
             Event::KeyDown => match event_key() {
                 Key::ControlL | Key::ShiftL => {
@@ -136,7 +136,7 @@ pub fn tree(channels: &Channels) -> Tree {
             }
             _ => match ev.bits() {
                 events::ADD_FEED_EVENT => {
-                    if let Ok(path) = add_feed_input_receiver.try_recv() {
+                    if let Ok(path) = add_feed_receiver.try_recv() {
                         t.add(path.as_str());
                         t.redraw();
                         true
@@ -145,7 +145,7 @@ pub fn tree(channels: &Channels) -> Tree {
                     }
                 }
                 events::ADD_FOLDER_EVENT => {
-                    if let Ok(path) = add_folder_input_receiver.try_recv() {
+                    if let Ok(path) = add_folder_receiver.try_recv() {
                         t.add(path.as_str());
                         t.redraw();
                         true

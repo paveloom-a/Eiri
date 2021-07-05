@@ -103,7 +103,7 @@ pub fn add_feed(window_icon: &PngImage, channels: &Channels) -> Window {
     });
 
     input.handle({
-        let s = channels.add_feed_input_sender.clone();
+        let s = channels.add_feed.s.clone();
         move |i, ev| match ev.bits() {
             events::ADD_FEED_WINDOW_SEND_INPUT => {
                 s.try_send(i.value()).ok();
@@ -118,7 +118,7 @@ pub fn add_feed(window_icon: &PngImage, channels: &Channels) -> Window {
     });
 
     input.set_callback({
-        let s = channels.mw_signal_sender.clone();
+        let s = channels.mw.s.clone();
         move |i| {
             app::handle_main(events::ADD_FEED_WINDOW_SEND_INPUT).ok();
             app::handle_main(events::HIDE_ADD_FEED_WINDOW).ok();
@@ -128,7 +128,7 @@ pub fn add_feed(window_icon: &PngImage, channels: &Channels) -> Window {
     });
 
     ok_button.set_callback({
-        let s = channels.mw_signal_sender.clone();
+        let s = channels.mw.s.clone();
         move |_| {
             app::handle_main(events::ADD_FEED_WINDOW_SEND_INPUT).ok();
             app::handle_main(events::ADD_FEED_WINDOW_CLEAR_INPUT).ok();
@@ -213,7 +213,7 @@ pub fn add_folder(window_icon: &PngImage, channels: &Channels) -> Window {
     });
 
     input.handle({
-        let s = channels.add_folder_input_sender.clone();
+        let s = channels.add_folder.s.clone();
         move |i, ev| match ev.bits() {
             events::ADD_FOLDER_WINDOW_SEND_INPUT => {
                 s.try_send(i.value()).ok();
@@ -228,7 +228,7 @@ pub fn add_folder(window_icon: &PngImage, channels: &Channels) -> Window {
     });
 
     input.set_callback({
-        let s = channels.mw_signal_sender.clone();
+        let s = channels.mw.s.clone();
         move |i| {
             app::handle_main(events::ADD_FOLDER_WINDOW_SEND_INPUT).ok();
             app::handle_main(events::HIDE_ADD_FOLDER_WINDOW).ok();
@@ -238,7 +238,7 @@ pub fn add_folder(window_icon: &PngImage, channels: &Channels) -> Window {
     });
 
     ok_button.set_callback({
-        let s = channels.mw_signal_sender.clone();
+        let s = channels.mw.s.clone();
         move |_| {
             app::handle_main(events::ADD_FOLDER_WINDOW_SEND_INPUT).ok();
             app::handle_main(events::ADD_FOLDER_WINDOW_CLEAR_INPUT).ok();

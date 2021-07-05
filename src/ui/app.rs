@@ -4,7 +4,7 @@ use fltk::{
     enums::FrameType,
 };
 
-/// The app's Options
+/// A struct providing access to the application's options
 pub struct Options {
     pub window_min_width: i32,
     pub window_min_height: i32,
@@ -15,7 +15,7 @@ pub struct Options {
 }
 
 impl Options {
-    /// Create an Options struct with default values
+    /// Get the default constant set of the application's options
     const fn default() -> Options {
         Options {
             window_min_width: 1000,
@@ -28,53 +28,63 @@ impl Options {
     }
 }
 
-/// Default set of the application options
+/// Default constant set of the application's options
 pub const OPTIONS: Options = Options::default();
 
-pub struct Channels {
-    // Channel 1: Any Window (Sender / Translator)
-    pub mw_signal_sender: Sender<i32>,
-    // Channel 1: Main Window (Receiver / Translated)
-    pub mw_signal_receiver: Receiver<i32>,
-    /// Channel 2: Add Feed Window (Sender / Translated)
-    pub a_feed_w_signal: Sender<i32>,
-    /// Channel 2: Main Window (Receiver / Translator)
-    pub mw_a_feed_w_translator: Receiver<i32>,
-    /// Channel 3: Add Folder Window (Sender / Translated)
-    pub a_folder_w_signal: Sender<i32>,
-    /// Channel 3: Main Window (Receiver / Translator)
-    pub mw_a_folder_w_translator: Receiver<i32>,
-    /// Channel 4: Feed Window's Input Widget / OK Button (Sender)
-    pub add_feed_input_sender: Sender<String>,
-    /// Channel 4: Feeds Tree (Receiver)
-    pub add_feed_input_receiver: Receiver<String>,
-    /// Channel 5: Add Folder Window's Input Widget / OK Button (Sender)
-    pub add_folder_input_sender: Sender<String>,
-    /// Channel 5: Feeds Tree (Receiver)
-    pub add_folder_input_receiver: Receiver<String>,
+macro_rules! channels_default_impl {
+    (
+        #[$struct_doc:meta]
+        pub struct $name:ident {
+        $(
+            #[$field_doc:meta]
+            pub $field_name:ident: $field_type:ty,
+        )*
+    }) => {
+        #[$struct_doc]
+        pub struct $name {
+            $(
+                #[$field_doc]
+                pub $field_name: $field_type,
+            )*
+        }
+
+        impl $name {
+            /// Get the default set of the application's channels
+            pub fn default() -> $name {
+                $name {
+                    $(
+                        $field_name: Channel::new(crossbeam_channel::unbounded()),
+                    )*
+                }
+            }
+        }
+    }
 }
 
-impl Channels {
-    ///
-    pub fn default() -> Channels {
-        let (mw_signal_sender, mw_signal_receiver) = crossbeam_channel::unbounded();
-        let (a_feed_w_signal, mw_a_feed_w_translator) = crossbeam_channel::unbounded();
-        let (a_folder_w_signal, mw_a_folder_w_translator) = crossbeam_channel::unbounded();
-        let (add_feed_input_sender, add_feed_input_receiver) = crossbeam_channel::unbounded();
-        let (add_folder_input_sender, add_folder_input_receiver) = crossbeam_channel::unbounded();
+pub struct Channel<T> {
+    pub s: Sender<T>,
+    pub r: Receiver<T>,
+}
 
-        Channels {
-            mw_signal_sender,
-            mw_signal_receiver,
-            a_feed_w_signal,
-            mw_a_feed_w_translator,
-            a_folder_w_signal,
-            mw_a_folder_w_translator,
-            add_feed_input_sender,
-            add_feed_input_receiver,
-            add_folder_input_sender,
-            add_folder_input_receiver,
-        }
+impl<T> Channel<T> {
+    fn new((s, r): (Sender<T>, Receiver<T>)) -> Channel<T> {
+        Channel { s, r }
+    }
+}
+
+channels_default_impl! {
+    /// A struct providing access to the application's channels
+    pub struct Channels {
+        /// Channel 1: From Any Window to Main Window
+        pub mw: Channel<i32>,
+        /// Channel 2: From Main Window to Add Feed Window
+        pub add_feed_window: Channel<i32>,
+        /// Channel 3: From Main Window to Add Folder Window
+        pub add_folder_window: Channel<i32>,
+        /// Channel 4: From Feed Window's Input Widget / OK Button to Feeds Tree
+        pub add_feed: Channel<String>,
+        /// Channel 5: From Add Folder Window's Input Widget / OK Button to Feeds Tree
+        pub add_folder: Channel<String>,
     }
 }
 
