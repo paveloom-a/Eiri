@@ -301,6 +301,7 @@ pub fn add_folder_logic(
                             }
                             l.add(path.as_str());
                         }
+                        l.redraw();
                         true
                     } else {
                         false
