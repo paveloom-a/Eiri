@@ -1,0 +1,7 @@
+# Rust
+/target
+
+# AppImage
+/AppDir
+/*.AppImage
+/appimage-builder-cache

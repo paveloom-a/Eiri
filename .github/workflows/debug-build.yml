@@ -1,0 +1,71 @@
+name: Debug Build
+
+on:
+  pull_request:
+    branches: main
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    name: ${{ ( startsWith(matrix.os, 'ubuntu') && 'Linux' ) ||
+              ( startsWith(matrix.os, 'windows') && 'Windows' ) ||
+              ( startsWith(matrix.os, 'mac') && 'macOS' ) }}
+    strategy:
+      matrix:
+        # os: [windows-latest, macos-10.15, ubuntu-18.04]
+        os: [windows-latest]
+
+    steps:
+    - name: Download dependencies (Linux only)
+      if: ${{ startsWith(matrix.os, 'ubuntu') }}
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libpango1.0-dev libx11-dev libxext-dev \
+                                libxft-dev libxinerama-dev libxcursor-dev \
+                                libxrender-dev libxfixes-dev ninja-build \
+                                appstream
+        sudo wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage -O /usr/local/bin/linuxdeploy
+        sudo chmod +x /usr/local/bin/linuxdeploy
+    - name: Checkout the repository
+      uses: actions/checkout@v2
+    - name: Build
+      run: |
+        cargo lint
+        cargo build
+        cargo build --release
+        if ${{ startsWith(matrix.os, 'windows') }}; then
+          mv target/debug/eiri.exe eiri-debug.exe
+          mv target/release/eiri.exe .
+        else
+          mv target/debug/eiri eiri-debug
+          mv target/release/eiri .
+          strip eiri eiri-debug
+        fi
+    - name: Create an AppImage (Linux only)
+      if: ${{ startsWith(matrix.os, 'ubuntu') }}
+      run: |
+        linuxdeploy --appdir AppDir -e eiri -d assets/eiri.desktop -i assets/eiri-64.png -o appimage
+        mv Eiri*.AppImage Eiri.AppImage
+    - name: Create an App Bundle (macOS only)
+      if: ${{ startsWith(matrix.os, 'mac') }}
+      run: |
+        cargo install cargo-bundle
+        cargo bundle
+        mv target/debug/bundle/osx/Eiri.app .
+    - name: Upload the binaries
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ ( startsWith(matrix.os, 'ubuntu') && 'Linux' ) ||
+                  ( startsWith(matrix.os, 'windows') && 'Windows' ) ||
+                  ( startsWith(matrix.os, 'macOS') && 'macOS' ) }}
+        path: |
+          eiri-debug
+          eiri-debug.exe
+          eiri
+          eiri.exe
+          Eiri.AppImage
+          Eiri.app

@@ -1,0 +1,33 @@
+[package]
+name = "eiri"
+version = "0.1.0"
+authors = ["paveloom"]
+edition = "2018"
+description = "Whoa! What's that?!"
+documentation = "https://docs.rs/eiri"
+readme = "README.md"
+homepage = "https://paveloom-a.github.io/Eiri"
+repository = "https://github.com/paveloom-a/Eiri"
+license-file = "LICENSE.md"
+keywords = ["rss", "news", "feed", "aggregator", "fltk"]
+categories = ["graphics"]
+
+[package.metadata.bundle]
+name = "Eiri"
+identifier = "io.github.paveloom.eiri"
+icon = ["assets/eiri-64.png"]
+resources = ["assets"]
+copyright = "Copyright (c) Pavel Sobolev 2021."
+category = "public.app-category.news"
+
+[profile.dev]
+panic = 'abort'
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = 'abort'
+
+[dependencies]
+fltk = { version = "~1.0.22", features = ["fltk-bundled", "use-ninja"] }
+crossbeam-channel = {version = "~0.5.1"}
