@@ -9,13 +9,14 @@ use fltk::{
     window::Window,
 };
 
-use super::app::{Channels, OPTIONS};
+use super::app::CONSTANTS;
+use crate::channels::Channels;
 use crate::events;
 
 /// Create a Feeds Pane
 pub fn new(window: &Window) -> Pack {
     let mut feeds = Pack::default().with_size(
-        OPTIONS.feeds_width + OPTIONS.vertical_border_width,
+        CONSTANTS.feeds_width + CONSTANTS.vertical_border_width,
         window.height(),
     );
     feeds.set_type(PackType::Horizontal);
@@ -24,12 +25,12 @@ pub fn new(window: &Window) -> Pack {
 
 /// Create a Feeds Pack (supposed to be a child of the Feeds Pane)
 pub fn pack() -> Pack {
-    Pack::default().with_size(OPTIONS.feeds_width, 0)
+    Pack::default().with_size(CONSTANTS.feeds_width, 0)
 }
 
 /// Create a Feeds' Vertical Border (supposed to be a child of the Feeds Pane)
 pub fn vertical_border() -> Frame {
-    let mut vertical_border = Frame::default().with_size(OPTIONS.vertical_border_width, 0);
+    let mut vertical_border = Frame::default().with_size(CONSTANTS.vertical_border_width, 0);
     vertical_border.set_frame(FrameType::FlatBox);
     vertical_border.set_color(Color::from_hex(0xF0_F0_F0));
     vertical_border
@@ -39,7 +40,7 @@ pub fn vertical_border() -> Frame {
 pub fn menubar(channels: &Channels) -> MenuBar {
     let _top_border = horizontal_border();
 
-    let mut feeds_menubar = MenuBar::default().with_size(0, OPTIONS.menubar_height);
+    let mut feeds_menubar = MenuBar::default().with_size(0, CONSTANTS.menubar_height);
     feeds_menubar.set_frame(FrameType::FlatBox);
     feeds_menubar.end();
 
@@ -76,7 +77,7 @@ pub fn menubar(channels: &Channels) -> MenuBar {
 
 /// Create a Feeds' Horizontal Border (supposed to be a child of the Feeds Pack)
 pub fn horizontal_border() -> Frame {
-    let mut horizontal_border = Frame::default().with_size(0, OPTIONS.horizontal_border_height);
+    let mut horizontal_border = Frame::default().with_size(0, CONSTANTS.horizontal_border_height);
     horizontal_border.set_frame(FrameType::FlatBox);
     horizontal_border.set_color(Color::from_hex(0xF0_F0_F0));
     horizontal_border
@@ -136,7 +137,7 @@ pub fn tree(channels: &Channels) -> Tree {
             _ => match ev.bits() {
                 events::ADD_FEED_EVENT => {
                     if let Ok(path) = add_feed_receiver.try_recv() {
-                        t.add(path.as_str());
+                        t.add(&path);
                         t.redraw();
                         true
                     } else {
@@ -149,7 +150,7 @@ pub fn tree(channels: &Channels) -> Tree {
                 }),
                 events::ADD_FOLDER_EVENT => {
                     if let Ok(path) = add_folder_receiver.try_recv() {
-                        t.add(path.as_str());
+                        t.add(&path);
                         t.redraw();
                         true
                     } else {

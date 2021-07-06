@@ -1,6 +1,7 @@
 // Switch from the console subsystem to the windows subsystem in the release mode
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
+mod channels;
 mod events;
 mod ui;
 
@@ -8,7 +9,7 @@ use fltk::{app, prelude::*};
 
 fn main() {
     // Application channels
-    let channels = ui::app::Channels::default();
+    let channels = channels::Channels::default();
 
     // Override the system's screen scaling
     for i in 0..app::screen_count() {

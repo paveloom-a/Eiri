@@ -7,11 +7,12 @@ use fltk::{
     image::PngImage,
     input::Input,
     prelude::*,
-    tree::Tree,
+    tree::{Tree, TreeItem},
     window::{DoubleWindow, Window},
 };
 
-use super::app::{Channels, OPTIONS};
+use super::app::CONSTANTS;
+use crate::channels::Channels;
 use crate::events;
 
 /// Load a Window Icon
@@ -24,12 +25,17 @@ pub fn main(window_icon: &PngImage) -> DoubleWindow {
     let mut window = Window::new(
         100,
         100,
-        OPTIONS.window_min_width,
-        OPTIONS.window_min_height,
+        CONSTANTS.window_min_width,
+        CONSTANTS.window_min_height,
         "Eiri",
     );
     window.set_icon(Some(window_icon.clone()));
-    window.size_range(OPTIONS.window_min_width, OPTIONS.window_min_height, 0, 0);
+    window.size_range(
+        CONSTANTS.window_min_width,
+        CONSTANTS.window_min_height,
+        0,
+        0,
+    );
     window.make_resizable(true);
     window
 }
@@ -39,7 +45,7 @@ pub fn tile(window: &Window) -> Tile {
     let window_tile = Tile::default().with_size(window.width(), window.height());
     let mut window_tile_resize_box = Frame::default()
         .with_pos(
-            window_tile.x() + OPTIONS.feeds_width + OPTIONS.vertical_border_width,
+            window_tile.x() + CONSTANTS.feeds_width + CONSTANTS.vertical_border_width,
             window_tile.y(),
         )
         .with_size(window_tile.w() - 800, window_tile.h());
@@ -250,7 +256,8 @@ pub fn add_folder_logic(
     });
 
     input.handle({
-        let s = channels.add_folder.s.clone();
+        let r_path = channels.add_folder_input.r.clone();
+        let s_input = channels.add_folder.s.clone();
         move |i, ev| match ev {
             Event::Hide => {
                 i.set_value("");
@@ -258,50 +265,8 @@ pub fn add_folder_logic(
             }
             _ => match ev.bits() {
                 events::ADD_FOLDER_WINDOW_SEND_INPUT => {
-                    s.try_send(i.value()).ok();
-                    true
-                }
-                _ => false,
-            },
-        }
-    });
-
-    input.set_callback({
-        let s = channels.mw.s.clone();
-        move |_| {
-            app::handle_main(events::ADD_FOLDER_WINDOW_SEND_INPUT).ok();
-            app::handle_main(events::HIDE_ADD_FOLDER_WINDOW).ok();
-            s.try_send(events::ADD_FOLDER_EVENT).ok();
-        }
-    });
-
-    location.handle({
-        let r = channels.add_folder_location.r.clone();
-        move |l, ev| match ev {
-            Event::Hide => l.root().map_or(false, |root| {
-                l.clear_children(&root);
-                true
-            }),
-            _ => match ev.bits() {
-                events::ADD_FOLDER_WINDOW_LOAD_LOCATION => {
-                    if let Ok(items) = r.try_recv() {
-                        for mut item in items {
-                            let mut path = String::default();
-                            if let Some(label) = item.label() {
-                                path.push_str(label.as_str());
-                            }
-                            while let Some(parent) = item.parent() {
-                                if let Some(label) = parent.label() {
-                                    if label.is_empty() {
-                                        break;
-                                    }
-                                    path = label + "/" + &path;
-                                }
-                                item = parent;
-                            }
-                            l.add(path.as_str());
-                        }
-                        l.redraw();
+                    if let Ok(path) = r_path.try_recv() {
+                        s_input.try_send(path + "/" + &i.value()).ok();
                         true
                     } else {
                         false
@@ -312,9 +277,52 @@ pub fn add_folder_logic(
         }
     });
 
+    input.set_callback({
+        let s = channels.mw.s.clone();
+        move |_| {
+            app::handle_main(events::ADD_FOLDER_WINDOW_SEND_LOCATION).ok();
+            app::handle_main(events::ADD_FOLDER_WINDOW_SEND_INPUT).ok();
+            app::handle_main(events::HIDE_ADD_FOLDER_WINDOW).ok();
+            s.try_send(events::ADD_FOLDER_EVENT).ok();
+        }
+    });
+
+    location.handle({
+        let s_folder = channels.add_folder_input.s.clone();
+        let r_feeds_tree = channels.add_folder_location.r.clone();
+        move |l, ev| match ev {
+            Event::Hide => l.root().map_or(false, |root| {
+                if let Some(item) = l.first_selected_item() {
+                    l.select_toggle(&item, false)
+                }
+                l.clear_children(&root);
+                true
+            }),
+            _ => match ev.bits() {
+                events::ADD_FOLDER_WINDOW_LOAD_LOCATION => {
+                    if let Ok(items) = r_feeds_tree.try_recv() {
+                        for mut item in items {
+                            l.add(&get_item_path(&mut item));
+                        }
+                        l.redraw();
+                        true
+                    } else {
+                        false
+                    }
+                }
+                events::ADD_FOLDER_WINDOW_SEND_LOCATION => l.first_selected_item().map_or_else(
+                    || s_folder.try_send(String::default()).is_ok(),
+                    |mut item| s_folder.try_send(get_item_path(&mut item)).is_ok(),
+                ),
+                _ => false,
+            },
+        }
+    });
+
     ok_button.set_callback({
         let s = channels.mw.s.clone();
         move |_| {
+            app::handle_main(events::ADD_FOLDER_WINDOW_SEND_LOCATION).ok();
             app::handle_main(events::ADD_FOLDER_WINDOW_SEND_INPUT).ok();
             app::handle_main(events::HIDE_ADD_FOLDER_WINDOW).ok();
             s.try_send(events::ADD_FOLDER_EVENT).ok();
@@ -324,4 +332,26 @@ pub fn add_folder_logic(
     cancel_button.set_callback(|_| {
         app::handle_main(events::HIDE_ADD_FOLDER_WINDOW).ok();
     });
+}
+
+/// Get the path to the tree item
+pub fn get_item_path(item: &mut TreeItem) -> String {
+    let mut path = String::default();
+    if let Some(label) = item.label() {
+        path.push_str(&label);
+    }
+    while let Some(parent) = item.parent() {
+        if let Some(label) = parent.label() {
+            if label.is_empty() || label == "All Feeds" {
+                break;
+            }
+            path = label + "/" + &path;
+        }
+        *item = parent;
+    }
+    if path == "All Feeds" {
+        String::default()
+    } else {
+        path
+    }
 }
